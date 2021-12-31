@@ -1,1 +1,53 @@
+#!/usr/bin/bash
 
+# update=1 ; means upadte available.
+# update=0 ; means already up to date.
+
+git-check()
+{
+ARG1=$1
+ARG2=$2
+ARG3=$3
+
+net_check() {
+connection="$(curl -Is http://www.google.com &> /dev/null; echo $?)"
+if [[ "$connection" = 0 ]]
+then
+NET=on
+fi
+}
+
+net_check
+
+if [[ -d ".git" ]]
+then
+if [[ ${#1} -gt "0" ]]
+then
+  if [[ $NET == "on" ]]
+  then
+    if [[ ${ARG2} == "-d" ]]
+    then
+      cd "${ARG3}"
+    fi
+    [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ] && echo "update=0" > $TMPDIR/update.log || echo "update=1" > $TMPDIR/update.log
+
+  if [[ ${ARG1} = "-s" ]]
+   then
+     :
+   elif [[ ${ARG1} == "-a" ]]
+   then
+    source $TMPDIR/update.log
+    if [[ $update == "1" ]]
+    then
+      echo "update available."
+    elif [[ $update == "0" ]]
+    then
+      echo "already up to date."
+   fi
+  fi
+ fi
+fi
+else
+echo "error : git repository not found."
+fi
+}
